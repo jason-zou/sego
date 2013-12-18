@@ -32,6 +32,12 @@ func (seg *Segmenter) Dictionary() *Dictionary {
 	return seg.dict
 }
 
+type WordUnit struct {
+    Word string
+    Freq int
+    Pos string
+}
+
 // 从文件中载入词典
 //
 // 可以载入多个词典文件，文件名用","分隔，排在前面的词典优先载入分词，比如
@@ -41,7 +47,9 @@ func (seg *Segmenter) Dictionary() *Dictionary {
 // 词典的格式为（每个分词一行）：
 //	分词文本 频率 词性
 func (seg *Segmenter) LoadDictionary(files string) {
-	seg.dict = new(Dictionary)
+	if seg.dict == nil {
+        seg.dict = new(Dictionary)
+    }
 	for _, file := range strings.Split(files, ",") {
 		log.Printf("载入sego词典 %s", file)
 		dictFile, err := os.Open(file)
@@ -76,12 +84,40 @@ func (seg *Segmenter) LoadDictionary(files string) {
 		}
 	}
 
+	log.Println("sego词典载入完毕")
+}
+
+func (seg *Segmenter) LoadDictionaryFromArray(wordsSlice []WordUnit) {
+	if seg.dict == nil {
+        seg.dict = new(Dictionary)
+    }
+    num := len(wordsSlice)
+    for i := 0; i < num; i++ {
+        words := make([]Text, 0)
+        arr := strings.Split(wordsSlice[i].Word, " ")
+        for _, v := range arr {
+            if len(v) == 0 {
+                continue
+            }
+            pw := splitTextToWords([]byte(v))
+            words = append(words, pw...)
+        }
+        token := Token{text: words, frequency: wordsSlice[i].Freq, pos: wordsSlice[i].Pos}
+        seg.dict.addToken(&token)
+    }
+}
+
+func (seg *Segmenter) CalDistance() {
+    if seg.dict == nil {
+        return
+    }
 	// 计算每个分词的路径值，路径值含义见Token结构体的注释
 	logTotalFrequency := float32(math.Log2(float64(seg.dict.totalFrequency)))
 	for _, token := range seg.dict.tokens {
 		token.distance = logTotalFrequency - float32(math.Log2(float64(token.frequency)))
 	}
 
+    /*
 	// 对每个分词进行细致划分，用于搜索引擎模式，该模式用法见Token结构体的注释。
 	for _, token := range seg.dict.tokens {
 		segments := seg.segmentWords(token.text, true)
@@ -106,10 +142,8 @@ func (seg *Segmenter) LoadDictionary(files string) {
 			}
 		}
 	}
-
-	log.Println("sego词典载入完毕")
+    */
 }
-
 // 对文本分词
 //
 // 输入参数：
@@ -237,7 +271,8 @@ func splitTextToWords(text Text) []Text {
 	alphanumericStart := 0
 	for current < len(text) {
 		r, size := utf8.DecodeRune(text[current:])
-		if size <= 2 && (unicode.IsLetter(r) || unicode.IsNumber(r)) {
+        sr := string(text[current : current + size])
+		if size <= 2 && (unicode.IsLetter(r) || unicode.IsNumber(r) || sr == "-" || sr == "+" || sr == "_" || sr == "&" ) {
 			// 当前是拉丁字母或数字（非中日韩文字）
 			if !inAlphanumeric {
 				alphanumericStart = current
