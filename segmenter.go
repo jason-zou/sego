@@ -272,7 +272,7 @@ func splitTextToWords(text Text) []Text {
 	for current < len(text) {
 		r, size := utf8.DecodeRune(text[current:])
         sr := string(text[current : current + size])
-		if size <= 2 && (unicode.IsLetter(r) || unicode.IsNumber(r) || sr == "-" || sr == "+" || sr == "_" || sr == "&" ) {
+		if size <= 2 && (unicode.IsLetter(r) || unicode.IsNumber(r) || sr == "-" || sr == "+" || sr == "_" || sr == "&" || sr == "." ) {
 			// 当前是拉丁字母或数字（非中日韩文字）
 			if !inAlphanumeric {
 				alphanumericStart = current
@@ -286,8 +286,10 @@ func splitTextToWords(text Text) []Text {
 					currentWord++
 				}
 			}
-			output[currentWord] = text[current : current+size]
-			currentWord++
+            if sr != " " {
+			    output[currentWord] = text[current : current+size]
+			    currentWord++
+            }
 		}
 		current += size
 	}
