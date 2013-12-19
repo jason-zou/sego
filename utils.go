@@ -58,6 +58,13 @@ func SegmentsToSlice(segs []Segment, searchMode bool) (output []string) {
 	return
 }
 
+func SegmentsToTextSlice(segs []Segment) (output [][]string) {
+    for _, seg := range segs {
+        output = append(output, seg.token.TextSlice())
+    }
+    return
+}
+
 func tokenToSlice(token *Token) (output []string) {
 	for _, s := range token.segments {
 		output = append(output, tokenToSlice(s.token)...)

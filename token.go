@@ -31,6 +31,14 @@ func (token *Token) Text() string {
 	return textSliceToString(token.text)
 }
 
+func (token *Token) TextSlice() []string {
+    out := make([]string, 0)
+    for i := range token.text {
+        out = append(out, string(token.text[i]))
+    }
+    return out
+}
+
 // 返回分词在语料库中的词频
 func (token *Token) Frequency() int {
 	return token.frequency
