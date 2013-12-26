@@ -65,6 +65,13 @@ func SegmentsToTextSlice(segs []Segment) (output [][]string) {
     return
 }
 
+func GetSegmentsFrequencies(segs []Segment) (freq []int) {
+    for _, seg := range segs {
+        freq = append(freq, seg.token.Frequency())
+    }
+    return
+}
+
 func tokenToSlice(token *Token) (output []string) {
 	for _, s := range token.segments {
 		output = append(output, tokenToSlice(s.token)...)
